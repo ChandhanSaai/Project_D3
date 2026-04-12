@@ -18,7 +18,7 @@ class D3Config:
     """Configuration for D3 evaluation framework."""
 
     # Model settings
-    model: str = "gpt-4-turbo"  # Backbone LLM for all agent roles
+    model: str = "gpt-5.4-nano"  # Backbone LLM for all agent roles
     api_key: str = ""  # Set via environment variable OPENAI_API_KEY
 
     # MORE protocol settings

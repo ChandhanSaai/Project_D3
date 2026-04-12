@@ -44,7 +44,7 @@ def main():
     parser.add_argument(
         "--model",
         type=str,
-        default="gpt-4",
+        default="gpt-5.4-nano",
         help="LLM model to use for agents",
     )
     parser.add_argument(
