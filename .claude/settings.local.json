@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:arxiv.org)"
+      "WebFetch(domain:arxiv.org)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); t=d[0]['text']; print\\(t[22000:32000]\\)\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); t=d[0]['text']; print\\(t[32000:45000]\\)\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); t=d[0]['text']; print\\(t[45000:]\\)\")",
+      "Bash(python -c ':*)",
+      "Bash(pip list:*)",
+      "Bash(pip install:*)",
+      "Bash(python -c \"from agents.advocate import Advocate, MORE_ADVOCATE_PROMPT, SAMRE_DEFEND_PROMPT, AGGREGATE_DEFENSE_PROMPT; from config import D3Config; print\\('All imports successful!'\\); c = D3Config\\(\\); print\\(f'Config: model={c.model}, advocates={c.num_advocates}, max_rounds={c.max_rounds}, jury_size={c.jury_size}'\\)\")",
+      "Bash(python -m venv /c/Users/chand/OneDrive/Desktop/Project_D3/venv)"
     ]
   }
 }
