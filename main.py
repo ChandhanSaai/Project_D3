@@ -6,8 +6,13 @@ Paper: https://arxiv.org/abs/2410.04663
 GitHub: https://github.com/abirharrasse/D3-Judge
 
 Usage:
-    python main.py --protocol more --question "..." --answer1 "..." --answer2 "..."
-    python main.py --protocol samre --question "..." --answer1 "..." --answer2 "..."
+    # Single-pair evaluation
+    python main.py evaluate --protocol more --question "..." --answer1 "..." --answer2 "..."
+    python main.py evaluate --protocol samre --question "..." --answer1 "..." --answer2 "..."
+
+    # Batch benchmark evaluation
+    python main.py batch --protocol more --dataset mt-bench
+    python main.py batch --protocol samre --dataset mt-bench --measure-bias --max-samples 20
 """
 
 import argparse
@@ -18,6 +23,7 @@ import sys
 from config import D3Config
 from protocols.more import MOREProtocol
 from protocols.samre import SAMREProtocol
+from evaluation.runner import BatchRunner
 
 
 def setup_logging(verbose):
@@ -30,10 +36,12 @@ def setup_logging(verbose):
     )
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="D3: Cost-Aware Adversarial Framework for LLM Evaluation"
-    )
+# ------------------------------------------------------------------
+# Shared argument helpers
+# ------------------------------------------------------------------
+
+def _add_common_args(parser):
+    """Add arguments shared by both subcommands."""
     parser.add_argument(
         "--protocol",
         type=str,
@@ -41,24 +49,6 @@ def main():
         default="more",
         help="Evaluation protocol: 'more' (Multi-Advocate One-Round) or "
              "'samre' (Single-Advocate Multi-Round)",
-    )
-    parser.add_argument(
-        "--question",
-        type=str,
-        required=True,
-        help="The question/prompt to evaluate answers for",
-    )
-    parser.add_argument(
-        "--answer1",
-        type=str,
-        required=True,
-        help="Candidate answer 1",
-    )
-    parser.add_argument(
-        "--answer2",
-        type=str,
-        required=True,
-        help="Candidate answer 2",
     )
     parser.add_argument(
         "--num-advocates",
@@ -113,19 +103,16 @@ def main():
         help="Path to write full results as JSON",
     )
 
-    args = parser.parse_args()
 
-    setup_logging(args.verbose)
-    logger = logging.getLogger("d3")
-
-    # Build config
+def _build_config(args):
+    """Build a D3Config from parsed args."""
     use_jury = True
     if args.no_jury:
         use_jury = False
     elif args.use_jury:
         use_jury = True
 
-    config = D3Config(
+    return D3Config(
         model=args.model,
         num_advocates=args.num_advocates,
         max_rounds=args.max_rounds,
@@ -133,6 +120,18 @@ def main():
         convergence_threshold=args.convergence_threshold,
         use_jury=use_jury,
     )
+
+
+# ------------------------------------------------------------------
+# Subcommand: evaluate (single question-answer pair)
+# ------------------------------------------------------------------
+
+def cmd_evaluate(args):
+    """Run D3 on a single question with two candidate answers."""
+    setup_logging(args.verbose)
+    logger = logging.getLogger("d3")
+
+    config = _build_config(args)
 
     # Select protocol
     if args.protocol == "more":
@@ -146,7 +145,7 @@ def main():
     print("=" * 60)
     print(f"Protocol:   {args.protocol.upper()}")
     print(f"Model:      {args.model}")
-    print(f"Jury:       {'enabled' if use_jury else 'disabled'}")
+    print(f"Jury:       {'enabled' if config.use_jury else 'disabled'}")
     if args.protocol == "more":
         print(f"Advocates:  {args.num_advocates} per answer")
     else:
@@ -163,6 +162,7 @@ def main():
 
     # Display results
     print()
+
     # Check for protocol-level errors (e.g. all advocates failed)
     if results.get("error"):
         print(f"ERROR: {results['error']}")
@@ -197,7 +197,6 @@ def main():
 
     # Optionally write full results to JSON
     if args.output_json:
-        # Make results JSON-serializable (remove non-serializable items)
         json_results = {
             "winner": results["winner"],
             "protocol": results["protocol"],
@@ -220,13 +219,131 @@ def main():
                 "rationales": results["verdict"]["rationales"],
             }
 
-        with open(args.output_json, "w") as f:
+        with open(args.output_json, "w", encoding="utf-8") as f:
             json.dump(json_results, f, indent=2)
         print(f"\nFull results written to: {args.output_json}")
 
     print()
     print("=" * 60)
     return results
+
+
+# ------------------------------------------------------------------
+# Subcommand: batch (benchmark evaluation)
+# ------------------------------------------------------------------
+
+def cmd_batch(args):
+    """Run D3 over an entire benchmark dataset."""
+    setup_logging(args.verbose)
+    logger = logging.getLogger("d3")
+
+    config = _build_config(args)
+
+    # Header
+    print("=" * 60)
+    print("D3: Batch Benchmark Evaluation")
+    print("=" * 60)
+    print(f"Protocol:   {args.protocol.upper()}")
+    print(f"Model:      {args.model}")
+    print(f"Dataset:    {args.dataset}")
+    print(f"Jury:       {'enabled' if config.use_jury else 'disabled'}")
+    if args.max_samples:
+        print(f"Max samples: {args.max_samples}")
+    if args.measure_bias:
+        print("Position bias measurement: enabled")
+    print("-" * 60)
+
+    runner = BatchRunner(config, protocol_name=args.protocol)
+
+    report = runner.run(
+        dataset_name=args.dataset,
+        data_path=args.data_path,
+        measure_bias=args.measure_bias,
+        max_samples=args.max_samples,
+        output_path=args.output_json,
+    )
+
+    print()
+    print("=" * 60)
+    return report
+
+
+# ------------------------------------------------------------------
+# Argument parser
+# ------------------------------------------------------------------
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="D3: Cost-Aware Adversarial Framework for LLM Evaluation"
+    )
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+    # --- evaluate subcommand ---
+    eval_parser = subparsers.add_parser(
+        "evaluate",
+        help="Evaluate a single question with two candidate answers",
+    )
+    eval_parser.add_argument(
+        "--question",
+        type=str,
+        required=True,
+        help="The question/prompt to evaluate answers for",
+    )
+    eval_parser.add_argument(
+        "--answer1",
+        type=str,
+        required=True,
+        help="Candidate answer 1",
+    )
+    eval_parser.add_argument(
+        "--answer2",
+        type=str,
+        required=True,
+        help="Candidate answer 2",
+    )
+    _add_common_args(eval_parser)
+
+    # --- batch subcommand ---
+    batch_parser = subparsers.add_parser(
+        "batch",
+        help="Run evaluation over an entire benchmark dataset",
+    )
+    batch_parser.add_argument(
+        "--dataset",
+        type=str,
+        choices=["mt-bench", "alignbench", "auto-j"],
+        required=True,
+        help="Benchmark dataset to evaluate on",
+    )
+    batch_parser.add_argument(
+        "--data-path",
+        type=str,
+        default=None,
+        help="Custom path to dataset file (overrides default data/ location)",
+    )
+    batch_parser.add_argument(
+        "--measure-bias",
+        action="store_true",
+        help="Re-run each sample with swapped answer order to measure position bias",
+    )
+    batch_parser.add_argument(
+        "--max-samples",
+        type=int,
+        default=None,
+        help="Limit evaluation to first N samples (useful for testing/cost control)",
+    )
+    _add_common_args(batch_parser)
+
+    args = parser.parse_args()
+
+    if args.command is None:
+        parser.print_help()
+        sys.exit(1)
+
+    if args.command == "evaluate":
+        return cmd_evaluate(args)
+    elif args.command == "batch":
+        return cmd_batch(args)
 
 
 if __name__ == "__main__":

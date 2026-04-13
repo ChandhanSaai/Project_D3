@@ -10,7 +10,10 @@
       "Bash(pip install:*)",
       "Bash(python -c \"from agents.advocate import Advocate, MORE_ADVOCATE_PROMPT, SAMRE_DEFEND_PROMPT, AGGREGATE_DEFENSE_PROMPT; from config import D3Config; print\\('All imports successful!'\\); c = D3Config\\(\\); print\\(f'Config: model={c.model}, advocates={c.num_advocates}, max_rounds={c.max_rounds}, jury_size={c.jury_size}'\\)\")",
       "Bash(python -m venv /c/Users/chand/OneDrive/Desktop/Project_D3/venv)",
-      "Bash(python -c \"import py_compile; py_compile.compile\\('protocols/more.py', doraise=True\\); py_compile.compile\\('protocols/samre.py', doraise=True\\); py_compile.compile\\('main.py', doraise=True\\); print\\('All 3 files OK'\\)\")"
+      "Bash(python -c \"import py_compile; py_compile.compile\\('protocols/more.py', doraise=True\\); py_compile.compile\\('protocols/samre.py', doraise=True\\); py_compile.compile\\('main.py', doraise=True\\); print\\('All 3 files OK'\\)\")",
+      "Bash(python main.py --help)",
+      "Bash(python main.py evaluate --help)",
+      "Bash(python main.py batch --help)"
     ]
   }
 }
