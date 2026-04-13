@@ -320,27 +320,27 @@ class MOREProtocol:
 
 # Example usage
 
-if __name__ == "__main__":
-    import dotenv
-    from config import D3Config
+# if __name__ == "__main__":
+#     import dotenv
+#     from config import D3Config
 
-    dotenv.load_dotenv()
+#     dotenv.load_dotenv()
 
-    config = D3Config(
-        model="gpt-5.4-nano",
-        api_key=None,
-        num_advocates=3,
-        use_jury=True,
-        jury_personas=None,
-        token_budget=20000,
-        verbose=True,
-    )
+#     config = D3Config(
+#         model="gpt-5.4-nano",
+#         api_key=None,
+#         num_advocates=3,
+#         use_jury=True,
+#         jury_personas=None,
+#         token_budget=20000,
+#         verbose=True,
+#     )
 
-    protocol = MOREProtocol(config)
+#     protocol = MOREProtocol(config)
 
-    question = "Which is better for hydration: water or soda?"
-    answer1 = "Water is better for hydration because it replenishes fluids without added sugar."
-    answer2 = "Soda is better because it contains sugar and energy."
+#     question = "Which is better for hydration: water or soda?"
+#     answer1 = "Water is better for hydration because it replenishes fluids without added sugar."
+#     answer2 = "Soda is better because it contains sugar and energy."
 
-    result = protocol.run(question, answer1, answer2)
-    print(result)
+#     result = protocol.run(question, answer1, answer2)
+#     print(result)
