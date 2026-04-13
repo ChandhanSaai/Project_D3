@@ -172,5 +172,6 @@ Thumbs.db
 
 # Project specific
 results/
-data/*.json
-data/*.jsonl
+data/**/*.json
+data/**/*.jsonl
+data/**/*_raw.*

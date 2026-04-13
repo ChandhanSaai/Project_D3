@@ -25,7 +25,6 @@ import logging
 import os
 import time
 
-from config import D3Config
 from evaluation.benchmarks import BenchmarkLoader
 from evaluation import metrics
 from protocols.more import MOREProtocol
@@ -100,7 +99,10 @@ class BatchRunner:
         token_counts = []
 
         # For position bias (swapped runs)
-        swapped_predictions = [] if measure_bias else None
+        # Store RAW positional winners (not remapped) for bias measurement.
+        # position_bias() compares positional winners: if the same position
+        # wins in both original and swapped order, that's position bias.
+        swapped_raw_predictions = [] if measure_bias else None
 
         start_time = time.time()
 
@@ -161,8 +163,8 @@ class BatchRunner:
                 swap_winner = swap_result["winner"]
                 token_counts.append(swap_result["total_tokens"])
 
-                # Remap: if swapped run says 1, that means original answer2
-                # won, so in original terms the winner is 2 (and vice versa).
+                # Remap for per-sample record: swap_winner=1 means original
+                # answer2 won, so in content terms the winner is 2.
                 if swap_winner == 1:
                     remapped = 2
                 elif swap_winner == 2:
@@ -170,7 +172,11 @@ class BatchRunner:
                 else:
                     remapped = 0
 
-                swapped_predictions.append(remapped)
+                # For position bias: use RAW positional winners (not remapped).
+                # If original says pos1 wins and swapped also says pos1 wins,
+                # the system is biased toward position 1.
+                swapped_raw_predictions.append(swap_winner)
+
                 sample_record["swap_prediction_raw"] = swap_winner
                 sample_record["swap_prediction_remapped"] = remapped
                 sample_record["swap_tokens"] = swap_result["total_tokens"]
@@ -185,11 +191,10 @@ class BatchRunner:
         cost = metrics.cost_summary(token_counts)
 
         bias = None
-        if measure_bias and swapped_predictions:
-            # Compare original predictions vs remapped swapped predictions
-            # Position bias: does the system give the same positional winner
-            # regardless of which content is in that position?
-            bias = metrics.position_bias(predictions, swapped_predictions)
+        if measure_bias and swapped_raw_predictions:
+            # Compare raw positional winners: if the same position wins in
+            # both original and swapped order, the system has position bias.
+            bias = metrics.position_bias(predictions, swapped_raw_predictions)
 
         report = {
             "results": per_sample,

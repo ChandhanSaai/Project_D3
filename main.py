@@ -77,7 +77,7 @@ def _add_common_args(parser):
     parser.add_argument(
         "--use-jury",
         action="store_true",
-        help="Enable jury panel for final decision (default: judge only)",
+        help="Enable jury panel for final decision (default: enabled)",
     )
     parser.add_argument(
         "--no-jury",
@@ -129,7 +129,6 @@ def _build_config(args):
 def cmd_evaluate(args):
     """Run D3 on a single question with two candidate answers."""
     setup_logging(args.verbose)
-    logger = logging.getLogger("d3")
 
     config = _build_config(args)
 
@@ -235,7 +234,6 @@ def cmd_evaluate(args):
 def cmd_batch(args):
     """Run D3 over an entire benchmark dataset."""
     setup_logging(args.verbose)
-    logger = logging.getLogger("d3")
 
     config = _build_config(args)
 

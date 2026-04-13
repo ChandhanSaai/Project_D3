@@ -36,7 +36,6 @@ import logging
 from agents.advocate import Advocate
 from agents.judge import Judge
 from agents.jury import Jury
-from config import D3Config
 from utils.budget import TokenBudgetManager
 
 logger = logging.getLogger(__name__)
@@ -313,46 +312,3 @@ class SAMREProtocol:
         self.advocate_a2.reset()
         self.judge.reset()
         self.budget = TokenBudgetManager(self.config.token_budget)
-
-
-# Example usage:
-
-# import dotenv
-# dotenv.load_dotenv()
-
-
-# config = D3Config(
-#     model="gpt-5.4-nano",
-#     api_key=None,               # uses OPENAI_API_KEY from .env
-#     max_rounds=3,
-#     token_budget=30000,
-#     convergence_threshold=5,
-#     use_jury=True,
-#     jury_personas=None,
-#     verbose=True,
-# )
-
-# question = "Which is better for hydration: water or soda?"
-# answer1 = "Water is better for hydration because it replenishes fluids without added sugar."
-# answer2 = "Soda is better because it contains sugar and energy."
-
-# protocol = SAMREProtocol(config)
-# result = protocol.run(question, answer1, answer2)
-
-# print("\n=== SAMRE RESULT ===")
-# print("Winner:", result["winner"])
-# print("Rounds completed:", result["rounds_completed"])
-# print("Stop reason:", result["stop_reason"])
-# print("Scores per round:", result["scores_per_round"])
-# print("Total tokens:", result["total_tokens"])
-# print("Protocol:", result["protocol"])
-
-# if result["verdict"] is not None:
-#     print("\n=== Jury Verdict ===")
-#     print(result["verdict"])
-
-# print("\n=== Final Judge Result ===")
-# print(result["judge_result_final"])
-
-# print("\n=== Transcript ===")
-# print(result["transcript"])
