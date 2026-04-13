@@ -219,6 +219,29 @@ class SAMREProtocol:
         rounds_completed = len(all_arguments)
 
         # ---------------------------------------------------------------
+        # Early abort: no successful rounds means nothing to deliberate on
+        # ---------------------------------------------------------------
+        if rounds_completed == 0:
+            logger.error(
+                "No successful debate rounds completed (stop_reason=%s). "
+                "Skipping transcript compilation and jury deliberation.",
+                stop_reason,
+            )
+            return {
+                "winner": 0,
+                "scores_per_round": [],
+                "verdict": None,
+                "transcript": "",
+                "rounds_completed": 0,
+                "stop_reason": stop_reason,
+                "judge_result_final": judge_result,
+                "total_tokens": self.budget.tokens_used,
+                "budget_remaining": self.budget.remaining(),
+                "protocol": "SAMRE",
+                "error": f"No completed rounds (stop_reason={stop_reason})",
+            }
+
+        # ---------------------------------------------------------------
         # Step 11 (post-loop): Compile final transcript
         # ---------------------------------------------------------------
         judge_scores_list = [s for s in scores_per_round]
