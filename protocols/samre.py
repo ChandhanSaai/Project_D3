@@ -141,6 +141,20 @@ class SAMREProtocol:
             )
             self.budget.consume(d2["token_count"])
 
+            # --- Step 4b: Handle advocate failure ---
+            if not d1.get("success", True) or not d2.get("success", True):
+                failed = []
+                if not d1.get("success", True):
+                    failed.append("Advocate A1")
+                if not d2.get("success", True):
+                    failed.append("Advocate A2")
+                logger.error(
+                    "%s failed at round %d. Stopping debate.",
+                    " and ".join(failed), r,
+                )
+                stop_reason = "advocate_failure"
+                break
+
             defense_a1 = d1["argument"]
             defense_a2 = d2["argument"]
 
