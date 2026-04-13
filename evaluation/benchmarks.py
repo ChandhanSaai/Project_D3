@@ -194,22 +194,54 @@ class BenchmarkLoader:
 
     @staticmethod
     def _load_alignbench(path):
-        """Parse AlignBench pairwise comparison JSON.
+        """Parse AlignBench evaluation data.
 
-        Expected: JSON array of objects with fields:
-            id, question, answer1 (or response_1), answer2 (or response_2),
-            label: 1 | 2 | 0
+        AlignBench is natively a *single-answer* benchmark: each sample
+        has a question and a reference answer, but no pairwise comparison.
+        The D3 paper creates pairwise samples by generating answers from
+        two different models and comparing them.
+
+        This loader supports two formats:
+
+        1. **Native AlignBench** (JSONL or JSON array from THUDM/AlignBench):
+           Fields: question_id, question, reference, category
+           -> Loaded with reference as answer1, answer2 left empty.
+              The runner must generate answer2 from a model before evaluation,
+              or the user can provide a pre-generated pairwise JSON.
+
+        2. **Pre-processed pairwise** (JSON array):
+           Fields: id, question, answer1/response_1, answer2/response_2, label
+           -> Loaded directly as pairwise samples.
         """
+        # Detect format: JSONL (one JSON object per line) vs JSON array
         with open(path, "r", encoding="utf-8") as f:
-            raw = json.load(f)
+            first_char = f.read(1).strip()
 
-        if isinstance(raw, dict):
-            # Some exports wrap the list under a key
-            raw = raw.get("data") or raw.get("samples") or []
+        if first_char == "[" or first_char == "{":
+            # JSON array or dict wrapper
+            with open(path, "r", encoding="utf-8") as f:
+                raw = json.load(f)
+            if isinstance(raw, dict):
+                raw = raw.get("data") or raw.get("samples") or []
+            objects = raw
+        else:
+            # JSONL
+            objects = []
+            with open(path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        objects.append(json.loads(line))
 
         samples = []
-        for idx, obj in enumerate(raw):
+        for idx, obj in enumerate(objects):
             question = obj.get("question") or obj.get("prompt", "")
+
+            if not question:
+                logger.warning("AlignBench: skipping sample %d (no question)", idx)
+                continue
+
+            # Try pairwise fields first
             answer1 = (
                 obj.get("answer1") or obj.get("response_1")
                 or obj.get("answer_a", "")
@@ -219,33 +251,39 @@ class BenchmarkLoader:
                 or obj.get("answer_b", "")
             )
 
-            if not question or not answer1 or not answer2:
-                logger.warning(
-                    "AlignBench: skipping sample %d (missing fields)", idx,
-                )
-                continue
+            # Fall back to native AlignBench format (single-answer)
+            if not answer1:
+                answer1 = obj.get("reference", "")
 
-            raw_label = obj.get("label", 0)
-            if isinstance(raw_label, str):
-                raw_label = raw_label.strip()
-                if raw_label in ("1", "a", "A"):
-                    human_label = 1
-                elif raw_label in ("2", "b", "B"):
-                    human_label = 2
+            # Parse label
+            if answer1 and answer2:
+                # Pairwise format — parse human label
+                raw_label = obj.get("label", 0)
+                if isinstance(raw_label, str):
+                    raw_label = raw_label.strip()
+                    if raw_label in ("1", "a", "A"):
+                        human_label = 1
+                    elif raw_label in ("2", "b", "B"):
+                        human_label = 2
+                    else:
+                        human_label = 0
                 else:
-                    human_label = 0
+                    human_label = int(raw_label) if raw_label in (1, 2) else 0
             else:
-                human_label = int(raw_label) if raw_label in (1, 2) else 0
+                # Single-answer format — no pairwise label
+                human_label = 0
 
             samples.append({
-                "question_id": obj.get("id", idx),
+                "question_id": obj.get("question_id") or obj.get("id", idx),
                 "question": question,
                 "answer1": answer1,
-                "answer2": answer2,
+                "answer2": answer2,  # may be "" for native format
                 "human_label": human_label,
                 "metadata": {
                     "category": obj.get("category", ""),
+                    "subcategory": obj.get("subcategory", ""),
                     "source": "alignbench",
+                    "requires_generation": answer2 == "",
                 },
             })
         return samples

@@ -13,7 +13,9 @@
       "Bash(python -c \"import py_compile; py_compile.compile\\('protocols/more.py', doraise=True\\); py_compile.compile\\('protocols/samre.py', doraise=True\\); py_compile.compile\\('main.py', doraise=True\\); print\\('All 3 files OK'\\)\")",
       "Bash(python main.py --help)",
       "Bash(python main.py evaluate --help)",
-      "Bash(python main.py batch --help)"
+      "Bash(python main.py batch --help)",
+      "WebSearch",
+      "Bash(python -c \"import py_compile; py_compile.compile\\('evaluation/benchmarks.py', doraise=True\\); print\\('OK'\\)\")"
     ]
   }
 }
