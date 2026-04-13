@@ -150,13 +150,13 @@ class Jury:
     # Internal helpers
     # ------------------------------------------------------------------
 
-    def _call_llm(self, system_message, prompt, max_tokens=500):
+    def _call_llm(self, system_message, prompt, max_completion_tokens=500):
         """Make an LLM call with error handling.
 
         Args:
             system_message: System-role instruction.
             prompt: User-role prompt.
-            max_tokens: Max response tokens.
+            max_completion_tokens: Max response tokens.
 
         Returns:
             dict with 'text', 'token_count', and 'success'.
@@ -169,7 +169,7 @@ class Jury:
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.5,
-                max_tokens=max_tokens,
+                max_completion_tokens=max_completion_tokens,
             )
 
             text = response.choices[0].message.content.strip()
@@ -400,7 +400,7 @@ class Jury:
             result = self._call_llm(
                 system_message=system_message,
                 prompt=prompt,
-                max_tokens=500,
+                max_completion_tokens=500,
             )
             total_tokens += result["token_count"]
 
