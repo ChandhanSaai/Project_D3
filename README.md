@@ -221,18 +221,6 @@ Every component maps directly to the paper's algorithms and appendices:
 - **Parallel execution:** MORE advocates generate arguments concurrently via `ThreadPoolExecutor`
 - **Per-advocate feedback:** In SAMRE, each advocate receives their own Judge feedback (not a shared copy)
 
-## Paper Reference
-
-```bibtex
-@article{harrasse2024debate,
-  title={Debate, Deliberate, Decide: A Cost-Aware Adversarial Framework
-         for Reliable and Interpretable LLM Evaluation},
-  author={Harrasse, Abir and others},
-  journal={arXiv preprint arXiv:2410.04663},
-  year={2024}
-}
-```
-
 ## License
 
 This is a research implementation. Please cite the original paper if you use this code.
