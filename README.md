@@ -1,7 +1,5 @@
 # D3: Debate, Deliberate, Decide
 
-A faithful Python implementation of **"Debate, Deliberate, Decide: A Cost-Aware Adversarial Framework for Reliable and Interpretable LLM Evaluation"** ([arXiv:2410.04663](https://arxiv.org/abs/2410.04663)).
-
 D3 orchestrates role-specialized LLM agents -- advocates, a judge, and an optional jury -- to evaluate LLM outputs through structured adversarial debate, inspired by courtroom proceedings.
 
 ## How It Works
