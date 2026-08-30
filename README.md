@@ -202,16 +202,6 @@ python main.py batch --dataset mt-bench --data-path path/to/data.jsonl \
 
 ## Implementation Details
 
-### Paper Faithfulness
-
-Every component maps directly to the paper's algorithms and appendices:
-
-- **Prompt templates** from Appendix F: F.1.1 (Judge MORE), F.1.2 (Advocate MORE), F.1.3 (Summarizer), F.2.1 (Advocate SAMRE defend), F.2.2 (Aggregate defense), F.2.4 (Judge SAMRE evaluate)
-- **Scoring rubric** from Appendix D.2: 6 criteria (Relevance, Accuracy, Depth, Clarity, Logic, Addressing opponent), each scored 1-20, max 120 per side
-- **Jury personas** from Appendix D.3: 5 diverse roles for balanced deliberation
-- **Budgeted stopping** from Section 2.2: convergence check + token budget enforcement
-- **Strict majority** from Section 2.3: >50% jury votes required, else Judge tie-break
-
 ### Robustness
 
 - **Prompt injection mitigation:** All user-supplied content wrapped in `<<<...>>>` delimiters
@@ -219,6 +209,3 @@ Every component maps directly to the paper's algorithms and appendices:
 - **Parallel execution:** MORE advocates generate arguments concurrently via `ThreadPoolExecutor`
 - **Per-advocate feedback:** In SAMRE, each advocate receives their own Judge feedback (not a shared copy)
 
-## License
-
-This is a research implementation. Please cite the original paper if you use this code.
